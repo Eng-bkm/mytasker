@@ -122,6 +122,15 @@ class MainActivity : AppCompatActivity() {
     private fun addNewTodo() {
         val todoTitle = binding.etTodoTitle.text.toString()
         if (todoTitle.isNotEmpty()) {
+            val currentDate = Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, -1) // Subtract one day from current date
+            }.time
+
+            if (selectedDate.before(currentDate)) {
+                Toast.makeText(this, "Cannot add a task to a past date", Toast.LENGTH_SHORT).show()
+                return
+            }
+
             val todo = Todo(todoTitle, date = selectedDate)
             addTodo(todo)
             binding.etTodoTitle.text.clear()
@@ -129,7 +138,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Please enter a task title", Toast.LENGTH_SHORT).show()
         }
     }
-
     private fun showFilterMenu(anchorView: View) {
         val popup = PopupMenu(this, anchorView)
         popup.menuInflater.inflate(R.menu.filter_menu, popup.menu)
@@ -258,6 +266,8 @@ class MainActivity : AppCompatActivity() {
 
                 if (time > System.currentTimeMillis()) {
                     scheduleNotification(todo, time, true)
+                } else {
+                    Log.d("Notification", "Reminder time is in the past, not scheduling")
                 }
             } else if (todo.hasDeadline()) {
                 val deadlineDateTime = "${todo.deadlineDate} ${todo.deadlineTime}"
@@ -266,6 +276,8 @@ class MainActivity : AppCompatActivity() {
 
                 if (time > System.currentTimeMillis()) {
                     scheduleNotification(todo, time, false)
+                } else {
+                    Log.d("Notification", "Deadline time is in the past, not scheduling")
                 }
             } else if (!todo.from.isNullOrEmpty()) {
                 val todoDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -276,7 +288,11 @@ class MainActivity : AppCompatActivity() {
                         .parse(fromDateTime) ?: Date()
                     add(Calendar.MINUTE, -5)
                 }
-                scheduleNotification(todo, calendar.timeInMillis, false)
+                if (calendar.timeInMillis > System.currentTimeMillis()) {
+                    scheduleNotification(todo, calendar.timeInMillis, false)
+                } else {
+                    Log.d("Notification", "Start time is in the past, not scheduling")
+                }
             }
         } catch (e: Exception) {
             Log.e("Notification", "Error scheduling notification for task: ${todo.title}", e)
@@ -494,12 +510,25 @@ class MainActivity : AppCompatActivity() {
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
+        // Calculate two days ago for minDate and comparison
+        val twoDaysAgo = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -2)
+        }
+
         val datePickerDialog = DatePickerDialog(
             this,
             { _, selectedYear, selectedMonth, selectedDay ->
-                val selectedCalendar = Calendar.getInstance()
-                selectedCalendar.set(selectedYear, selectedMonth, selectedDay)
+                val selectedCalendar = Calendar.getInstance().apply {
+                    set(selectedYear, selectedMonth, selectedDay)
+                }
                 val selectedDate = getStartOfDay(selectedCalendar.time)
+
+                // Compare with two days ago (allowing two days ago, yesterday and today)
+                if (selectedDate.before(getStartOfDay(twoDaysAgo.time))) {
+                    Toast.makeText(this, "Cannot select a date before two days ago", Toast.LENGTH_SHORT).show()
+                    return@DatePickerDialog
+                }
+
                 this.selectedDate = selectedDate
                 isWeeklyView = false
                 updateTodoListForSelectedDate()
@@ -510,9 +539,11 @@ class MainActivity : AppCompatActivity() {
             month,
             day
         )
+
+        // Set minimum date to two days ago
+        datePickerDialog.datePicker.minDate = twoDaysAgo.timeInMillis
         datePickerDialog.show()
     }
-
     public fun saveTodos() {
         try {
             val fileOutputStream: FileOutputStream = openFileOutput(todoFile, Context.MODE_PRIVATE)
@@ -628,23 +659,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleTodoUpdate(updatedTodo: Todo) {
-        val dateString = dateFormat.format(updatedTodo.date ?: Date())
-        todosByDate[dateString]?.let { dateTodos ->
-            val index = dateTodos.indexOfFirst {
-                it.title == updatedTodo.title && dateFormat.format(it.date) == dateString
-            }
-            if (index != -1) {
-                dateTodos[index] = updatedTodo.copy()
-                scheduleTodoNotification(updatedTodo)
-                saveTodos()
-
-                originalTodoList.indexOfFirst {
-                    it.title == updatedTodo.title && dateFormat.format(it.date) == dateString
-                }.takeIf { it != -1 }?.let { idx ->
-                    originalTodoList[idx] = updatedTodo.copy()
-                }
-            }
-        }
+        cancelTodoNotification(updatedTodo)
+        scheduleTodoNotification(updatedTodo)
+        saveTodos()
     }
 
     private fun handleTodoDelete(position: Int) {

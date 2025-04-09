@@ -33,7 +33,7 @@ class TodoAdapter(
         private var currentTodo: Todo? = null
 
         fun bind(todo: Todo) {
-            currentTodo = todo.copy()
+            currentTodo = todo
             updateUI(currentTodo!!)
             setupClickListeners()
             setupTextWatchers()
@@ -85,7 +85,7 @@ class TodoAdapter(
                     currentTodo?.let { todo ->
                         todo.isImportant = !todo.isImportant
                         updateImportanceUI(todo.isImportant)
-                        onTodoUpdated(todo.copy())
+                        onTodoUpdated(todo)
                     }
                 }
 
@@ -93,7 +93,7 @@ class TodoAdapter(
                     currentTodo?.let { todo ->
                         todo.isUrgent = !todo.isUrgent
                         updateUrgencyUI(todo.isUrgent)
-                        onTodoUpdated(todo.copy())
+                        onTodoUpdated(todo)
                     }
                 }
 
@@ -101,34 +101,34 @@ class TodoAdapter(
                     currentTodo?.let { todo ->
                         todo.day = !todo.day
                         if (todo.day) {
-                            (context as MainActivity).dayRepeater(todo.copy())
+                            (context as MainActivity).dayRepeater(todo)
                         }
-                        onTodoUpdated(todo.copy())
+                        onTodoUpdated(todo)
                     }
                 }
 
                 tvWeek.setOnClickListener {
                     currentTodo?.let { todo ->
-                        (context as MainActivity).weekRepeater(todo.copy())
+                        (context as MainActivity).weekRepeater(todo)
                     }
                 }
 
                 tvMonth.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showMonthRepeatDialog(todo.copy())
+                        showMonthRepeatDialog(todo)
                     }
                 }
 
                 cbDone.setOnCheckedChangeListener { _, isChecked ->
                     currentTodo?.let { todo ->
                         todo.isChecked = isChecked
-                        onTodoUpdated(todo.copy())
+                        onTodoUpdated(todo)
                     }
                 }
 
                 tvFrom.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showTimePicker(todo.copy(), true) { updatedTodo ->
+                        showTimePicker(todo, true) { updatedTodo ->
                             currentTodo?.from = updatedTodo.from
                             updateUI(currentTodo!!)
                             onTodoUpdated(updatedTodo)
@@ -138,7 +138,7 @@ class TodoAdapter(
 
                 tvTo.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showTimePicker(todo.copy(), false) { updatedTodo ->
+                        showTimePicker(todo, false) { updatedTodo ->
                             currentTodo?.to = updatedTodo.to
                             updateUI(currentTodo!!)
                             onTodoUpdated(updatedTodo)
@@ -148,7 +148,7 @@ class TodoAdapter(
 
                 tvDeadlineDate.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showDatePicker(todo.copy(), true) { updatedTodo ->
+                        showDatePicker(todo, true) { updatedTodo ->
                             currentTodo?.deadlineDate = updatedTodo.deadlineDate
                             updateUI(currentTodo!!)
                             onTodoUpdated(updatedTodo)
@@ -158,17 +158,27 @@ class TodoAdapter(
 
                 tvDeadlineTime.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showTimePicker(todo.copy(), null) { updatedTodo ->
-                            currentTodo?.deadlineTime = updatedTodo.deadlineTime
-                            updateUI(currentTodo!!)
-                            onTodoUpdated(updatedTodo)
+                        if (todo.deadlineDate.isNullOrEmpty()) {
+                            Toast.makeText(context, "Please set date first", Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
+                        showTimePicker(todo, null) { updatedTodo ->
+                            checkDateTimeValidity(updatedTodo.deadlineDate, updatedTodo.deadlineTime) { isValid ->
+                                if (isValid) {
+                                    currentTodo?.deadlineTime = updatedTodo.deadlineTime
+                                    updateUI(currentTodo!!)
+                                    onTodoUpdated(updatedTodo)
+                                } else {
+                                    Toast.makeText(context, "Cannot set past deadline", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         }
                     }
                 }
 
                 tvReminderDate.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showDatePicker(todo.copy(), false) { updatedTodo ->
+                        showDatePicker(todo, false) { updatedTodo ->
                             currentTodo?.reminderTimeDate = updatedTodo.reminderTimeDate
                             updateUI(currentTodo!!)
                             onTodoUpdated(updatedTodo)
@@ -178,13 +188,37 @@ class TodoAdapter(
 
                 tvReminderTime.setOnClickListener {
                     currentTodo?.let { todo ->
-                        showReminderTimePicker(todo.copy()) { updatedTodo ->
-                            currentTodo?.reminderTimeTime = updatedTodo.reminderTimeTime
-                            updateUI(currentTodo!!)
-                            onTodoUpdated(updatedTodo)
+                        if (todo.reminderTimeDate.isNullOrEmpty()) {
+                            Toast.makeText(context, "Please set date first", Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
+                        showReminderTimePicker(todo) { updatedTodo ->
+                            checkDateTimeValidity(updatedTodo.reminderTimeDate, updatedTodo.reminderTimeTime) { isValid ->
+                                if (isValid) {
+                                    currentTodo?.reminderTimeTime = updatedTodo.reminderTimeTime
+                                    updateUI(currentTodo!!)
+                                    onTodoUpdated(updatedTodo)
+                                } else {
+                                    Toast.makeText(context, "Cannot set past reminder", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        private fun checkDateTimeValidity(dateStr: String?, timeStr: String?, callback: (Boolean) -> Unit) {
+            if (dateStr == null || timeStr == null) {
+                callback(false)
+                return
+            }
+            try {
+                val combinedFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                val dateTime = combinedFormat.parse("$dateStr $timeStr")
+                callback(dateTime != null && dateTime.after(Date()))
+            } catch (e: Exception) {
+                callback(false)
             }
         }
 
@@ -193,7 +227,7 @@ class TodoAdapter(
                 override fun afterTextChanged(s: Editable?) {
                     currentTodo?.let { todo ->
                         todo.title = s?.toString() ?: ""
-                        onTodoUpdated(todo.copy())
+                        onTodoUpdated(todo)
                     }
                 }
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -218,8 +252,6 @@ class TodoAdapter(
             isFrom: Boolean?,
             callback: (Todo) -> Unit
         ) {
-            (context as? MainActivity)?.cancelTodoNotification(todo)
-
             val calendar = Calendar.getInstance()
             val hour = calendar.get(Calendar.HOUR_OF_DAY)
             val minute = calendar.get(Calendar.MINUTE)
@@ -235,7 +267,6 @@ class TodoAdapter(
                             null -> deadlineTime = formattedTime
                         }
                     }
-                    (context as? MainActivity)?.scheduleTodoNotification(updatedTodo)
                     callback(updatedTodo)
                 },
                 hour, minute, true
@@ -259,7 +290,6 @@ class TodoAdapter(
                             reminderTimeDate = dateFormat.format(date ?: Date())
                         }
                     }
-                    (context as? MainActivity)?.scheduleTodoNotification(updatedTodo)
                     callback(updatedTodo)
                 },
                 hour, minute, true
@@ -271,16 +301,25 @@ class TodoAdapter(
             isDeadline: Boolean,
             callback: (Todo) -> Unit
         ) {
-            (context as? MainActivity)?.cancelTodoNotification(todo)
-
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
             val month = calendar.get(Calendar.MONTH)
             val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            DatePickerDialog(
+            val datePickerDialog = DatePickerDialog(
                 context,
                 { _, selectedYear, selectedMonth, selectedDay ->
+                    val selectedDate = Calendar.getInstance().apply {
+                        set(selectedYear, selectedMonth, selectedDay)
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    if (selectedDate.before(Calendar.getInstance())) {
+                        Toast.makeText(context, "Cannot select a past date", Toast.LENGTH_SHORT).show()
+                        return@DatePickerDialog
+                    }
                     val formattedDate = String.format("%02d/%02d/%04d",
                         selectedDay, selectedMonth + 1, selectedYear)
                     val updatedTodo = todo.copy().apply {
@@ -290,11 +329,12 @@ class TodoAdapter(
                             reminderTimeDate = formattedDate
                         }
                     }
-                    (context as? MainActivity)?.scheduleTodoNotification(updatedTodo)
                     callback(updatedTodo)
                 },
                 year, month, day
-            ).show()
+            )
+            datePickerDialog.datePicker.minDate = System.currentTimeMillis()
+            datePickerDialog.show()
         }
     }
 
@@ -304,14 +344,14 @@ class TodoAdapter(
     }
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
-        holder.bind(todos[position].copy())
+        holder.bind(todos[position])
     }
 
     override fun getItemCount(): Int = todos.size
 
     fun updateTodos(newTodos: List<Todo>) {
         todos.clear()
-        todos.addAll(newTodos.map { it.copy() })
+        todos.addAll(newTodos)
         notifyDataSetChanged()
     }
 
