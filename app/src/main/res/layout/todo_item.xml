@@ -65,7 +65,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
-        android:text="From"
+        android:hint="From"
         app:layout_constraintStart_toEndOf="@+id/cbDone"
         app:layout_constraintTop_toBottomOf="@+id/tvTodoTitle" />
 
@@ -74,7 +74,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:text="To"
+        android:hint="To"
         app:layout_constraintStart_toEndOf="@+id/tvFrom"
         app:layout_constraintTop_toTopOf="@+id/tvFrom" />
 
@@ -99,7 +99,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Deadline:" />
+                android:text="Deadline: " />
 
             <EditText
                 android:id="@+id/tvDeadlineDate"
@@ -107,7 +107,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:padding="4dp"
-                android:hint="Select Date"
+                android:hint="Date"
                 android:focusable="false"
                 android:clickable="true" />
 
@@ -117,7 +117,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:padding="4dp"
-                android:hint="Select Time"
+                android:hint="Time"
                 android:focusable="false"
                 android:clickable="true" />
         </LinearLayout>
@@ -140,7 +140,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:padding="4dp"
-                android:hint="Select Date"
+                android:hint="Date"
                 android:focusable="false"
                 android:clickable="true" />
 
@@ -150,7 +150,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:padding="4dp"
-                android:hint="Select Time"
+                android:hint="Time"
                 android:focusable="false"
                 android:clickable="true" />
         </LinearLayout>
@@ -165,7 +165,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Every:" />
+                android:text="Repeat:    " />
 
             <Button
                 android:id="@+id/tvDay"
@@ -177,7 +177,7 @@
             android:minHeight="0dp"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
-            android:text="Day"
+            android:text="Daily"
             android:textColor="#000000"
             android:textSize="12sp"
             app:backgroundTint="#d9f7ff"
@@ -193,7 +193,7 @@
                 android:minHeight="0dp"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
-                android:text="Week"
+                android:text="Weekly"
                 android:textColor="#000000"
                 android:textSize="12sp"
                 app:backgroundTint="#d9f7ff"
@@ -209,7 +209,7 @@
                 android:minHeight="0dp"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
-                android:text="Month"
+                android:text="Monthly"
                 android:textColor="#000000"
                 android:textSize="12sp"
                 app:backgroundTint="#d9f7ff"

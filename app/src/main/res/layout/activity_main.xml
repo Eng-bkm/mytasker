@@ -10,14 +10,13 @@
     <!-- Top Bar -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/topBar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="56dp"
         android:background="#133c4a"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Menu Button -->
         <ImageButton
             android:id="@+id/btnMenu"
             android:layout_width="48dp"
@@ -30,21 +29,17 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <!-- Calendar Title (Centered) -->
         <ImageView
             android:id="@+id/tvCalendar"
             android:layout_width="231dp"
             android:layout_height="56dp"
-
-            android:scaleType="fitCenter"
             android:contentDescription="TaskForce Logo"
+            android:scaleType="fitCenter"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/btnCalendar"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@id/btnMenu"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintEnd_toStartOf="@id/btnCalendar"/>
 
-        <!-- Calendar Button -->
         <ImageButton
             android:id="@+id/btnCalendar"
             android:layout_width="48dp"
@@ -58,85 +53,76 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Days of the Week RecyclerView (Directly Below Top Bar) -->
+    <!-- Days of the Week -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvDaysOfWeek"
-        android:layout_width="415dp"
+        android:layout_width="0dp"
         android:layout_height="52dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topBar" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Todo Items RecyclerView (Directly Below Days of the Week) -->
+    <!-- Todo Items List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTodoItems"
-        android:layout_width="412dp"
-        android:layout_height="623dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/rvDaysOfWeek"
+        app:layout_constraintBottom_toTopOf="@id/bottomLayout"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Bottom Input Area -->
+    <LinearLayout
+        android:id="@+id/bottomLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-
-    <!-- Bottom Layout (Task Input + Buttons) -->
-        <LinearLayout
-            android:id="@+id/bottomLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
+        <EditText
+            android:id="@+id/etTodoTitle"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="56dp"
+            android:hint="Add a Task"
             android:padding="8dp"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="36dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:textSize="16sp"/>
 
-            <!-- Task Input Field -->
-            <EditText
-                android:id="@+id/etTodoTitle"
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                android:layout_height="56dp"
-                android:hint="Add a Task"
-                android:padding="8dp" android:textSize="16sp"/>
+        <ImageButton
+            android:id="@+id/btnAddTodo"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_input_add"
+            android:contentDescription="Add Todo"
+            android:elevation="6dp"
+            android:layout_marginStart="8dp"/>
 
-            <!-- Add Button (Largest) -->
-            <ImageButton
-                android:id="@+id/btnAddTodo"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_input_add"
-                android:contentDescription="Add Todo"
-                android:elevation="6dp"
-                android:layout_marginStart="8dp"/>
+        <ImageButton
+            android:id="@+id/btnDeleteDoneTodos"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            android:contentDescription="Clear Done Tasks"
+            android:elevation="4dp"
+            android:layout_marginStart="8dp"/>
 
-            <!-- Delete Done Button (Medium Size) -->
-            <ImageButton
-                android:id="@+id/btnDeleteDoneTodos"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_delete"
-                android:contentDescription="Clear Done Tasks"
-                android:elevation="4dp"
-                android:layout_marginStart="8dp"/>
-
-            <!-- Delete Repeated Button (Smallest) -->
-            <ImageButton
-                android:id="@+id/btnDeleteRepeated"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_delete"
-                android:tint="#D32F2F"
-                android:contentDescription="Delete Repeated Tasks"
-                android:elevation="4dp"
-                android:layout_marginStart="8dp"/>
-        </LinearLayout>
-
-
-
+        <ImageButton
+            android:id="@+id/btnDeleteRepeated"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_delete"
+            android:tint="#D32F2F"
+            android:contentDescription="Delete Repeated Tasks"
+            android:elevation="4dp"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

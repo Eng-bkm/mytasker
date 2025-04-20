@@ -38,6 +38,8 @@ class TodoAdapter(
             setupClickListeners()
             setupTextWatchers()
 
+
+
             binding.llTodoDetails.visibility = if (adapterPosition == expandedPosition) View.VISIBLE else View.GONE
             itemView.setOnClickListener {
                 expandedPosition = if (adapterPosition == expandedPosition) -1 else adapterPosition
@@ -49,20 +51,29 @@ class TodoAdapter(
             with(binding) {
                 tvTodoTitle.text = todo.title
                 cbDone.isChecked = todo.isChecked
-                tvFrom.text = todo.from ?: "Set start"
-                tvTo.text = todo.to ?: "Set end"
-                tvDeadlineDate.setText(todo.deadlineDate ?: "Set date")
-                tvDeadlineTime.setText(todo.deadlineTime ?: "Set time")
-                tvReminderDate.setText(todo.reminderTimeDate ?: "Set date")
-                tvReminderTime.setText(todo.reminderTimeTime ?: "Set time")
+                tvFrom.text = todo.from
+                tvTo.text = todo.to
+
+                // Handle deadline date display
+                val mainDate = todo.date?.let { dateFormat.format(it) } ?: ""
+                tvDeadlineDate.text = when {
+                    !todo.deadlineDate.isNullOrEmpty() && todo.deadlineDate != mainDate ->
+                        todo.deadlineDate.toEditable()
+                    else -> "".toEditable()
+                }
+
+                tvDeadlineTime.text = todo.deadlineTime?.toEditable() ?: "".toEditable()
+                tvReminderDate.text = todo.reminderTimeDate?.toEditable() ?: "".toEditable()
+                tvReminderTime.text = todo.reminderTimeTime?.toEditable() ?: "".toEditable()
                 tvDay.isSelected = todo.day
                 tvWeek.isSelected = todo.week
                 tvMonth.isSelected = todo.month
-                updateImportanceUI(todo.isImportant)
-                updateUrgencyUI(todo.isUrgent)
             }
         }
 
+        // Extension function to convert String to Editable
+        private fun String?.toEditable(): Editable =
+            Editable.Factory.getInstance().newEditable(this ?: "")
         private fun updateImportanceUI(isImportant: Boolean) {
             binding.ivImportant.apply {
                 setImageResource(if (isImportant) R.drawable.ic_star_filled else R.drawable.ic_star_outline)
@@ -159,8 +170,7 @@ class TodoAdapter(
                 tvDeadlineTime.setOnClickListener {
                     currentTodo?.let { todo ->
                         if (todo.deadlineDate.isNullOrEmpty()) {
-                            Toast.makeText(context, "Please set date first", Toast.LENGTH_SHORT).show()
-                            return@setOnClickListener
+                            todo.deadlineDate = dateFormat.format(todo.date ?: Date())
                         }
                         showTimePicker(todo, null) { updatedTodo ->
                             checkDateTimeValidity(updatedTodo.deadlineDate, updatedTodo.deadlineTime) { isValid ->
@@ -189,8 +199,7 @@ class TodoAdapter(
                 tvReminderTime.setOnClickListener {
                     currentTodo?.let { todo ->
                         if (todo.reminderTimeDate.isNullOrEmpty()) {
-                            Toast.makeText(context, "Please set date first", Toast.LENGTH_SHORT).show()
-                            return@setOnClickListener
+                            todo.reminderTimeDate = dateFormat.format(todo.date ?: Date())
                         }
                         showReminderTimePicker(todo) { updatedTodo ->
                             checkDateTimeValidity(updatedTodo.reminderTimeDate, updatedTodo.reminderTimeTime) { isValid ->

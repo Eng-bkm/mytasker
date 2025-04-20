@@ -4,6 +4,7 @@ import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 data class Todo(
     var title: String,
@@ -13,6 +14,7 @@ data class Todo(
     var isImportant: Boolean = false,
     var isUrgent: Boolean = false,
     var deadlineDate: String? = null,
+    val id: String = UUID.randomUUID().toString(),
     var deadlineTime: String? = null,
     var reminders: MutableList<String> = mutableListOf(),
     var day: Boolean = false,
