@@ -1,113 +1,173 @@
 package com.example.taskmanager
 
 import android.app.DatePickerDialog
-import android.graphics.Paint
+import android.app.TimePickerDialog
+import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.taskmanager.databinding.ItemTodoBinding
+import com.example.taskmanager.databinding.TodoItemBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-/**
- * TodoAdapter is a RecyclerView.Adapter that manages the display of a list of Todo items.
- * It handles the creation, binding, and updating of Todo item views within a RecyclerView.
- *
- * @param todos A mutable list of {@link Todo} objects to be displayed.
- */
-class TodoAdapter(
-    val todos: MutableList<Todo>,
+class TodoAdapter(val todos: MutableList<Todo>, private val context: Context) :
+    RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
-    ) : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
+    private var expandedPosition = -1
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    class TodoViewHolder(val binding: ItemTodoBinding) : RecyclerView.ViewHolder(binding.root)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoViewHolder {
-        val binding = ItemTodoBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return TodoViewHolder(binding)
-    }
-
-    override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
-        val curTodo = todos[position]
-        holder.binding.apply {
-            tvTodoTitle.text = curTodo.title
-            cbDone.isChecked = curTodo.isChecked
-            toggleStrikeThrough(tvTodoTitle, curTodo.isChecked)
-            cbDone.setOnCheckedChangeListener { _, isChecked ->
-                toggleStrikeThrough(tvTodoTitle, isChecked)
-                curTodo.isChecked = isChecked
+    inner class TodoViewHolder(val binding: TodoItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(todo: Todo) {
+            binding.tvTodoTitle.text = todo.title
+            binding.tvFrom.text = todo.from ?: "None"
+            binding.tvTo.text = todo.to ?: "None"
+            binding.cbDone.isChecked = todo.isChecked
+            binding.tvDeadlineDate.text = todo.deadlineDate ?: "None"
+            binding.tvDeadlineTime.text = todo.deadlineTime ?: "None"
+            binding.tvDay.isSelected = todo.day
+            binding.tvWeek.isSelected = todo.week
+            binding.tvMonth.isSelected = todo.month
+            binding.ivImportant.visibility = if (todo.isImportant) View.VISIBLE else View.GONE
+            binding.ivUrgent.visibility = if (todo.isUrgent) View.VISIBLE else View.GONE
+            binding.btnAddReminder.setOnClickListener {
+                addReminder(todo)
             }
-            btn1.setOnClickListener {
-                Log.d("TodoAdapter", "btn1 clicked for position: $position")
-                showDatePickerDialog(holder, position)
+            binding.tvDay.setOnClickListener {
+                setRepeat(todo, "Day")
             }
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            tvDeadline.text = if (curTodo.deadline != null) {
-                "Deadline: ${dateFormat.format(curTodo.deadline!!)}"
-            } else {
-                "date: ${dateFormat.format(curTodo.date!!)}"
+            binding.tvWeek.setOnClickListener {
+                setRepeat(todo, "Week")
             }
-            // Set initial state of important/urgent icons
-            updateImportantIcon(ivImportant, curTodo.isImportant)
-            updateUrgentIcon(ivUrgent, curTodo.isUrgent)
-
-            // Handle clicks on important icon
-            ivImportant.setOnClickListener {
-                curTodo.isImportant = !curTodo.isImportant
-                updateImportantIcon(ivImportant, curTodo.isImportant)
+            binding.tvMonth.setOnClickListener {
+                setRepeat(todo, "Month")
             }
-
-            // Handle clicks on urgent icon
-            ivUrgent.setOnClickListener {
-                curTodo.isUrgent = !curTodo.isUrgent
-                updateUrgentIcon(ivUrgent, curTodo.isUrgent)
+            binding.cbDone.setOnCheckedChangeListener { _, isChecked ->
+                todo.isChecked = isChecked
+                saveTodos()
+            }
+            binding.tvFrom.setOnClickListener {
+                showTimePickerDialog(todo, true)
+            }
+            binding.tvTo.setOnClickListener {
+                showTimePickerDialog(todo, false)
+            }
+            binding.tvDeadlineDate.setOnClickListener {
+                showDatePickerDialog(todo)
+            }
+            binding.tvDeadlineTime.setOnClickListener {
+                showTimePickerDialog(todo, null)
+            }
+            binding.ivImportant.setOnClickListener {
+                todo.isImportant = !todo.isImportant
+                binding.ivImportant.visibility = if (todo.isImportant) View.VISIBLE else View.GONE
+                saveTodos()
+            }
+            binding.ivUrgent.setOnClickListener {
+                todo.isUrgent = !todo.isUrgent
+                binding.ivUrgent.visibility = if (todo.isUrgent) View.VISIBLE else View.GONE
+                saveTodos()
+            }
+            binding.llReminders.removeAllViews()
+            for (reminder in todo.reminders) {
+                addReminderView(reminder, todo, binding) // Pass the binding here
             }
         }
     }
 
-    override fun getItemCount(): Int {
-        return todos.size
+    private fun addReminder(todo: Todo) {
+        val newReminder = "None"
+        todo.reminders.add(newReminder)
+        //addReminderView(newReminder, todo) // Remove this line
+        notifyDataSetChanged()
+        saveTodos()
     }
 
-    fun addTodo(todo: Todo) {
-        todos.add(todo)
-        notifyItemInserted(todos.size - 1)
+    // Add the binding parameter here
+    private fun addReminderView(reminder: String, todo: Todo, binding: TodoItemBinding) {
+        val reminderView = LayoutInflater.from(context).inflate(R.layout.reminder_item, null)
+        val tvReminder = reminderView.findViewById<TextView>(R.id.tvReminder)
+        tvReminder.text = reminder
+        tvReminder.setOnClickListener {
+            showDateTimePickerDialog(todo, tvReminder)
+        }
+        binding.llReminders.addView(reminderView) // Now you can use binding here
     }
 
-    fun deleteDoneTodos() {
-        todos.removeAll { todo ->
-            todo.isChecked
+    private fun setRepeat(todo: Todo, repeatType: String) {
+        when (repeatType) {
+            "Day" -> {
+                todo.day = !todo.day
+                todo.week = false
+                todo.month = false
+            }
+            "Week" -> {
+                todo.week = !todo.week
+                todo.day = false
+                todo.month = false
+            }
+            "Month" -> {
+                todo.month = !todo.month
+                todo.day = false
+                todo.week = false
+            }
         }
         notifyDataSetChanged()
+        saveTodos()
     }
 
-    private fun toggleStrikeThrough(tvTodoTitle: TextView, isChecked: Boolean) {
-        if (isChecked) {
-            tvTodoTitle.paintFlags = tvTodoTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-        } else {
-            tvTodoTitle.paintFlags = tvTodoTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-        }
+
+    private fun showTimePickerDialog(todo: Todo, isFrom: Boolean?) {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        val timePickerDialog = TimePickerDialog(
+            context,
+            { _, selectedHour, selectedMinute ->
+                val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+                if (isFrom == true) {
+                    todo.from = formattedTime
+                    //binding.tvFrom.text = formattedTime // Remove this line
+                    notifyDataSetChanged()
+                } else if (isFrom == false) {
+                    todo.to = formattedTime
+                    //binding.tvTo.text = formattedTime // Remove this line
+                    notifyDataSetChanged()
+                } else {
+                    todo.deadlineTime = formattedTime
+                    //binding.tvDeadlineTime.text = formattedTime // Remove this line
+                    notifyDataSetChanged()
+                }
+                saveTodos()
+            },
+            hour,
+            minute,
+            true
+        )
+        timePickerDialog.show()
     }
-    private fun showDatePickerDialog(holder: TodoViewHolder, position: Int) {
+
+    private fun showDatePickerDialog(todo: Todo) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
         val datePickerDialog = DatePickerDialog(
-            holder.itemView.context,
+            context,
             { _, selectedYear, selectedMonth, selectedDay ->
                 val selectedCalendar = Calendar.getInstance()
                 selectedCalendar.set(selectedYear, selectedMonth, selectedDay)
                 val selectedDate = selectedCalendar.time
-                Log.d("TodoAdapter", "Date selected: $selectedDate for position: $position")
-                //onDeadlineSet(position, selectedDate)
+                todo.deadlineDate = dateFormat.format(selectedDate)
+                //binding.tvDeadlineDate.text = todo.deadlineDate // Remove this line
+                notifyDataSetChanged()
+                saveTodos()
             },
             year,
             month,
@@ -115,19 +175,62 @@ class TodoAdapter(
         )
         datePickerDialog.show()
     }
-    private fun updateImportantIcon(imageView: ImageView, isImportant: Boolean) {
-        if (isImportant) {
-            imageView.setBackgroundResource(R.drawable.triangle_highlighted)
-        } else {
-            imageView.setBackgroundResource(R.drawable.triangle_normal)
+
+    private fun showDateTimePickerDialog(todo: Todo, tvReminder: TextView) {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val timePickerDialog = TimePickerDialog(
+                    context,
+                    { _, selectedHour, selectedMinute ->
+                        val selectedCalendar = Calendar.getInstance()
+                        selectedCalendar.set(selectedYear, selectedMonth, selectedDay, selectedHour, selectedMinute)
+                        val selectedDateTime = selectedCalendar.time
+                        val formattedDateTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(selectedDateTime)
+                        tvReminder.text = formattedDateTime
+                        todo.reminders[todo.reminders.indexOf(tvReminder.text)] = formattedDateTime
+                        saveTodos()},
+                    hour,
+                    minute,
+                    true
+                )
+                timePickerDialog.show()
+            },
+            year,
+            month,
+            day
+        )
+        datePickerDialog.show()
+    }
+
+    public fun saveTodos() {
+        (context as MainActivity).saveTodos()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TodoViewHolder {
+        val binding = TodoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return TodoViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
+        val todo = todos[position]
+        holder.bind(todo)
+        val isExpanded = position == expandedPosition
+        holder.binding.llTodoDetails.visibility = if (isExpanded) View.VISIBLE else View.GONE
+        holder.itemView.setOnClickListener {
+            expandedPosition = if (isExpanded) -1 else position
+            notifyItemChanged(position)
         }
     }
 
-    private fun updateUrgentIcon(imageView: ImageView, isUrgent: Boolean) {
-        if (isUrgent) {
-            imageView.setBackgroundResource(R.drawable.oval_highlighted)
-        } else {
-            imageView.setBackgroundResource(R.drawable.oval_normal)
-        }
+    override fun getItemCount(): Int {
+        return todos.size
     }
 }

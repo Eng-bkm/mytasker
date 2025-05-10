@@ -6,72 +6,59 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/tvLogo"
+    <EditText
+        android:id="@+id/etTodoTitle"
+        android:layout_width="307dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="76dp"
+        android:hint="Enter todo title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rvTodoItems" />
+
+    <Button
+        android:id="@+id/btnAddTodo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="🗓️"
-        android:textSize="30sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:text="Add"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/etTodoTitle"
+        app:layout_constraintTop_toTopOf="@+id/etTodoTitle" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTodoItems"
+        android:layout_width="423dp"
+        android:layout_height="334dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/rvDaysOfWeek"
+        app:layout_constraintTop_toBottomOf="@+id/rvDaysOfWeek" />
+
+    <Button
+        android:id="@+id/btnDeleteDoneTodos"
+        android:layout_width="411dp"
+        android:layout_height="wrap_content"
+        android:text="Delete Done Todos"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etTodoTitle"
+        app:layout_constraintVertical_bias="0.962"
+        tools:layout_editor_absoluteX="0dp" />
 
     <TextView
         android:id="@+id/tvCalendar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:text="📅"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tvLogo"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="Calendar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tvLogo" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvDaysOfWeek"
-        android:layout_width="match_parent"
+        android:layout_width="411dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/tvLogo" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTodoItems"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/llAddTodo"
-        app:layout_constraintTop_toBottomOf="@+id/rvDaysOfWeek" />
-
-    <LinearLayout
-        android:id="@+id/llAddTodo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/btnDeleteDoneTodos">
-
-        <EditText
-            android:id="@+id/etTodoTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Enter todo title" />
-
-        <Button
-            android:id="@+id/btnAddTodo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Add" />
-    </LinearLayout>
-
-    <Button
-        android:id="@+id/btnDeleteDoneTodos"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="Delete done todos"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvCalendar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
